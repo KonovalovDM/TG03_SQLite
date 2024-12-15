@@ -44,12 +44,16 @@ init_db()
 # Хэндлер для команды /start
 @dp.message(CommandStart)
 async def start(message: Message, state: FSMContext):
-    await state.clear()  # Сбрасываем состояние
+    current_state = await state.get_state()
+    if current_state is not None:
+        await message.answer('Ты уже начал регистрацию. Давай продолжим.')
+        return
+    await state.clear()
     logging.debug("Состояние сброшено.")
-    logging.debug("Команда /start получена")
     await message.answer('Приветики, я Школьный Бот! А тебя как зовут?')
     await state.set_state(Form.name)
     logging.debug("Состояние установлено: Form.name")
+
 
 # Хэндлер для ввода имени
 @dp.message(Form.name)
@@ -99,10 +103,23 @@ async def get_grade(message: Message, state: FSMContext):
     await state.clear()
     logging.debug("Состояние очищено")
 
+# Глобальный отладочный хэндлер
+@dp.message()
+async def debug_handler(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    logging.debug(f"Получено сообщение: {message.text}, текущее состояние: {current_state}")
+
+
 # Запуск бота
 async def main():
-    logging.debug("Запуск бота...")
-    await dp.start_polling(bot)
+    try:
+        logging.debug("Запуск бота...")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logging.error(f"Ошибка во время работы бота: {e}")
+    finally:
+        await bot.session.close()
+
 
 if __name__ == '__main__':
     asyncio.run(main())
