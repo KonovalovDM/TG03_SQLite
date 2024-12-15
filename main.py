@@ -23,6 +23,7 @@ class Form(StatesGroup):
     age = State()
     grade = State()
 
+
 # Инициализация базы данных
 def init_db():
     conn = sqlite3.connect('school_data.db')
@@ -41,18 +42,27 @@ def init_db():
 # Вызываем функцию для создания базы данных
 init_db()
 
+
 # Хэндлер для команды /start
 @dp.message(CommandStart)
 async def start(message: Message, state: FSMContext):
     current_state = await state.get_state()
-    if current_state is not None:
-        await message.answer('Ты уже начал регистрацию. Давай продолжим.')
-        return
-    await state.clear()
-    logging.debug("Состояние сброшено.")
-    await message.answer('Приветики, я Школьный Бот! А тебя как зовут?')
-    await state.set_state(Form.name)
-    logging.debug("Состояние установлено: Form.name")
+    logging.debug(f"Проверка текущего состояния: {current_state}")
+
+    # Если пользователь уже в процессе регистрации
+    if current_state == Form.name.state:
+        await message.answer("Ты уже начал регистрацию. Как тебя зовут?")
+    elif current_state == Form.age.state:
+        await message.answer("Ты уже начал регистрацию. Сколько тебе лет?")
+    elif current_state == Form.grade.state:
+        await message.answer("Ты уже начал регистрацию. В каком ты классе?")
+    else:
+        # Если регистрации нет, начинаем заново
+        await state.clear()
+        logging.debug("Состояние сброшено.")
+        await message.answer("Приветики, я Школьный Бот! А тебя как зовут?")
+        await state.set_state(Form.name)
+        logging.debug("Состояние установлено: Form.name")
 
 
 # Хэндлер для ввода имени
@@ -65,7 +75,8 @@ async def get_name(message: Message, state: FSMContext):
     await state.update_data(name=message.text.strip())  # Сохраняем имя
     await message.answer('Сколько тебе лет?')
     await state.set_state(Form.age)
-    logging.debug(f"Имя сохранено: {message.text.strip()}, состояние: Form.age")
+    logging.debug(f"Имя сохранено: {message.text.strip()}, состояние: {await state.get_state()}")
+
 
 # Хэндлер для ввода возраста
 @dp.message(Form.age)
@@ -77,7 +88,8 @@ async def get_age(message: Message, state: FSMContext):
     await state.update_data(age=int(message.text))
     await message.answer('В каком ты классе?')
     await state.set_state(Form.grade)
-    logging.debug(f"Возраст сохранен: {message.text}, состояние: Form.grade")
+    logging.debug(f"Возраст сохранен: {message.text}, состояние: {await state.get_state()}")
+
 
 # Хэндлер для ввода класса
 @dp.message(Form.grade)
@@ -101,13 +113,20 @@ async def get_grade(message: Message, state: FSMContext):
 
     await message.answer(f"Отлично, {student_data['name']}! Твои данные внесены в базу школы.")
     await state.clear()
-    logging.debug("Состояние очищено")
+    logging.debug(f"Состояние очищено: {await state.get_state()}")
 
-# Глобальный отладочный хэндлер
+
+
+# Глобальный хэндлер: работает только для сообщений вне состояний
 @dp.message()
 async def debug_handler(message: Message, state: FSMContext):
     current_state = await state.get_state()
     logging.debug(f"Получено сообщение: {message.text}, текущее состояние: {current_state}")
+
+    # Если пользователь находится в состоянии, пропускаем обработку этим хэндлером
+    if current_state:
+        return
+    await message.answer("Я тебя не понимаю. Используй команду /start, чтобы начать.")
 
 
 # Запуск бота
