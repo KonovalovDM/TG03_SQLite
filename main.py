@@ -17,6 +17,7 @@ bot = Bot(token=TOKEN)
 storage = MemoryStorage()  # Хранилище состояний
 dp = Dispatcher(storage=storage)
 
+
 # Определяем состояния
 class Form(StatesGroup):
     name = State()
@@ -44,7 +45,7 @@ init_db()
 
 
 # Хэндлер для команды /start
-@dp.message(CommandStart)
+@dp.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     current_state = await state.get_state()
     logging.debug(f"Проверка текущего состояния: {current_state}")
@@ -63,6 +64,7 @@ async def start(message: Message, state: FSMContext):
         await message.answer("Приветики, я Школьный Бот! А тебя как зовут?")
         await state.set_state(Form.name)
         logging.debug("Состояние установлено: Form.name")
+
 
 
 # Хэндлер для ввода имени
