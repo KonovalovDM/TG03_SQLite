@@ -44,7 +44,7 @@ init_db()
 
 
 # Хэндлер для команды /start
-@dp.message(CommandStart)
+@dp.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     current_state = await state.get_state()
     logging.debug(f"Проверка текущего состояния: {current_state}")
