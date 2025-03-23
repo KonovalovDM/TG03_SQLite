@@ -3,7 +3,7 @@
 
 
 
-Решелась следующая задача:
+Решалась следующая задача:
 1. Создайте новую базу данных school_data.db.<br>
 2. В этой базе данных создайте таблицу students с колонками:<br> 
 id (INTEGER, PRIMARY KEY, AUTOINCREMENT)<br> name (TEXT)<br> age (INTEGER)<br> grade (TEXT)<br>
